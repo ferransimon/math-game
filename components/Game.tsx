@@ -6,6 +6,8 @@ import { timeLimit } from "@/lib/difficulty";
 import { MODES } from "@/lib/modes";
 import Lives from "./Lives";
 import GameOver from "./GameOver";
+import AnswerGrid from "./AnswerGrid";
+import { useLang } from "./LangProvider";
 
 const MAX_LIVES = 3;
 const RIGHT_DELAY = 600;
@@ -70,6 +72,7 @@ function reducer(s: State, a: Action): State {
 }
 
 export default function Game({ mode, onExit }: { mode: Mode; onExit: () => void }) {
+  const { t } = useLang();
   const [s, dispatch] = useReducer(reducer, mode, init);
   const info = MODES.find((m) => m.id === mode)!;
 
@@ -102,7 +105,7 @@ export default function Game({ mode, onExit }: { mode: Mode; onExit: () => void 
   if (s.phase === "over") {
     return (
       <GameOver
-        mode={mode}
+        scoreKey={mode}
         score={s.correct}
         accent={info.accent}
         onRestart={() => dispatch({ type: "restart" })}
@@ -119,7 +122,7 @@ export default function Game({ mode, onExit }: { mode: Mode; onExit: () => void 
       <header className="flex items-center justify-between py-2">
         <button
           onClick={onExit}
-          aria-label="Volver al inicio"
+          aria-label={t.backHome}
           className="flex size-11 items-center justify-center rounded-full bg-white/70 text-xl font-black text-ink-soft shadow-sm active:scale-95"
         >
           ✕
@@ -127,7 +130,7 @@ export default function Game({ mode, onExit }: { mode: Mode; onExit: () => void 
         <Lives lives={s.lives} max={MAX_LIVES} />
         <div
           className={`${info.card} min-w-11 rounded-full px-3 py-1.5 text-center text-xl font-black tabular-nums`}
-          aria-label={`Puntos: ${s.correct}`}
+          aria-label={t.points(s.correct)}
         >
           {s.correct}
         </div>
@@ -152,44 +155,25 @@ export default function Game({ mode, onExit }: { mode: Mode; onExit: () => void 
           {q.a} {q.op} {q.b}
         </div>
 
-        <div key={`o${s.qid}`} className="grid grid-cols-2 gap-4">
-          {q.options.map((n) => {
-            const isAnswer = n === q.answer;
-            const isPicked = n === s.picked;
-            let style = "bg-white shadow-[0_5px_0_rgba(74,68,88,0.08)]";
-            let anim = "";
-            if (feedback) {
-              if (isAnswer) {
-                style = "bg-good";
-                if (isPicked) anim = "anim-pop";
-              } else if (isPicked) {
-                style = "bg-bad";
-                anim = "anim-shake";
-              } else style = "bg-white opacity-40";
-            }
-            return (
-              <button
-                key={n}
-                onClick={() => dispatch({ type: "answer", value: n })}
-                disabled={feedback}
-                className={`${style} ${anim} h-24 rounded-3xl text-5xl font-black tabular-nums transition-[background-color,opacity,transform] duration-150 active:translate-y-1 active:shadow-none disabled:cursor-default`}
-              >
-                {n}
-              </button>
-            );
-          })}
-        </div>
+        <AnswerGrid
+          key={`o${s.qid}`}
+          options={q.options}
+          answer={q.answer}
+          picked={s.picked}
+          feedback={feedback}
+          onPick={(n) => dispatch({ type: "answer", value: n })}
+        />
 
         <p
           className={`mt-6 h-7 text-center text-lg font-extrabold ${feedback ? "opacity-100" : "opacity-0"} transition-opacity`}
           aria-live="polite"
         >
           {s.phase === "right"
-            ? "¡Muy bien!"
+            ? t.wellDone
             : s.phase === "wrong"
               ? s.picked === null
-                ? `¡Tiempo! Era ${q.answer}`
-                : `Era ${q.answer}`
+                ? t.timeUp(q.answer)
+                : t.was(q.answer)
               : ""}
         </p>
       </section>

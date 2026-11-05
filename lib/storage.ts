@@ -1,19 +1,48 @@
-import type { Mode } from "./questions";
+import type { Lang } from "./i18n";
 
-const key = (mode: Mode) => `mathgame:best:${mode}`;
+export type ScoreKey = "sumas" | "restas" | "tablas" | "mezcla" | "problemas";
 
-export function getBest(mode: Mode): number {
+function read(key: string): string | null {
   try {
-    return Number(localStorage.getItem(key(mode))) || 0;
+    return localStorage.getItem(key);
   } catch {
-    return 0;
+    return null;
   }
 }
 
-export function setBest(mode: Mode, score: number): void {
+function write(key: string, value: string | null): void {
   try {
-    localStorage.setItem(key(mode), String(score));
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
   } catch {
     /* storage unavailable */
   }
 }
+
+export const getBest = (mode: ScoreKey) => Number(read(`mathgame:best:${mode}`)) || 0;
+export const setBest = (mode: ScoreKey, score: number) => write(`mathgame:best:${mode}`, String(score));
+
+/** Problems series progress: blocks completed and hits so far. */
+export function getProblemsProgress(): { block: number; correct: number } {
+  return {
+    block: Number(read("mathgame:problems:block")) || 0,
+    correct: Number(read("mathgame:problems:correct")) || 0,
+  };
+}
+
+export function setProblemsProgress(block: number, correct: number): void {
+  write("mathgame:problems:block", block ? String(block) : null);
+  write("mathgame:problems:correct", block ? String(correct) : null);
+}
+
+export function getLang(): Lang {
+  const saved = read("mathgame:lang");
+  if (saved === "es" || saved === "ca") return saved;
+  try {
+    return navigator.language.toLowerCase().startsWith("ca") ? "ca" : "es";
+  } catch {
+    return "es";
+  }
+}
+
+export const setLang = (lang: Lang) => write("mathgame:lang", lang);

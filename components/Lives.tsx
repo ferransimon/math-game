@@ -1,6 +1,11 @@
+"use client";
+
+import { useLang } from "./LangProvider";
+
 export default function Lives({ lives, max }: { lives: number; max: number }) {
+  const { t } = useLang();
   return (
-    <div className="flex gap-1.5" aria-label={`${lives} vidas`}>
+    <div className="flex gap-1.5" aria-label={t.lives(lives)}>
       {Array.from({ length: max }, (_, i) => {
         const alive = i < lives;
         return (
