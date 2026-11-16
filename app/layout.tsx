@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import RegisterSW from "@/components/RegisterSW";
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh font-sans">
         {children}
         <RegisterSW />
+        <Analytics />
       </body>
     </html>
   );
